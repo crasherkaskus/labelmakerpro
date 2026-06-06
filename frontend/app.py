@@ -3,6 +3,33 @@ import requests
 import pandas as pd
 import base64
 import os
+import subprocess
+import time
+import socket
+
+# Helper to check if API port is active
+def check_api_connection(ip, port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(0.5)
+    try:
+        s.connect((ip, int(port)))
+        return True
+    except Exception:
+        return False
+    finally:
+        s.close()
+
+# Auto-start FastAPI backend if not running (ideal for single-container cloud deployment)
+if not check_api_connection("127.0.0.1", 8000):
+    try:
+        subprocess.Popen(
+            ["uvicorn", "backend.main:app", "--host", "127.0.0.1", "--port", "8000"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        time.sleep(1.5)  # Wait for uvicorn to bind
+    except Exception as e:
+        pass
 
 # Backend API configuration
 API_BASE_URL = os.environ.get("LABELMAKER_API_URL", "http://127.0.0.1:8000")
