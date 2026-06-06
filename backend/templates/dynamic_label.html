@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Cetak Label - {{ template_name }}{% endblock %}
+
+{% block extra_styles %}
+.grid-table {
+    border-collapse: collapse;
+    width: {{ table_width }}mm;
+    height: {{ table_height }}mm;
+    margin-left: {{ side_margin }}mm;
+    margin-right: {{ side_margin }}mm;
+    margin-top: {{ top_margin }}mm;
+    margin-bottom: {{ top_margin }}mm;
+    table-layout: fixed;
+}
+.label-box {
+    width: {{ label_width }}mm;
+    height: {{ label_height }}mm;
+    padding: 1.5mm;
+    text-align: center;
+    vertical-align: middle;
+    overflow: hidden;
+    
+    /* Dynamic Typography Styles */
+    font-family: "{{ font_family|default('Arial') }}", Arial, Helvetica, sans-serif;
+    font-weight: {% if font_bold %}bold{% else %}normal{% endif %};
+    font-style: {% if font_italic %}italic{% else %}normal{% endif %};
+    text-decoration: {% if font_underline %}underline{% else %}none{% endif %};
+
+    {% if show_borders %}
+    border: 0.1mm dashed #cccccc;
+    {% else %}
+    border: 0.1mm solid transparent;
+    {% endif %}
+}
+.label-box.empty {
+    {% if show_borders %}
+    border: 0.1mm dashed #eeeeee;
+    {% else %}
+    border: 0.1mm solid transparent;
+    {% endif %}
+}
+.gap-col {
+    width: {{ col_gap }}mm;
+}
+.gap-row-tr {
+    height: {{ row_gap }}mm;
+    line-height: {{ row_gap }}mm;
+    font-size: 0;
+}
+.gap-row-td {
+    height: {{ row_gap }}mm;
+}
+
+/* Styles for single-line label mode */
+.label-name-single {
+    /* Uses inherited font-weight from .label-box but defaults to bold if not overridden */
+    font-weight: {% if font_bold %}bold{% else %}bold{% endif %};
+    font-size: {{ font_size_name }}pt;
+    text-transform: uppercase;
+    width: 100%;
+    text-align: center;
+    line-height: 1.3;
+}
+{% endblock %}
+
+{% block content %}
+{% for page in pages %}
+<div class="sheet">
+    <table class="grid-table">
+        {% for row in page %}
+        <tr>
+            {% for label in row %}
+                {% if label.is_empty %}
+                    <td class="label-box empty"></td>
+                {% else %}
+                    <td class="label-box">
+                        {% if single_line_mode %}
+                            <div class="label-name-single">{{ label.nama }}</div>
+                        {% else %}
+                            <div class="label-name">{{ label.nama }}</div>
+                            <div class="label-address">{{ label.alamat }}</div>
+                            {% if label.detail %}
+                                <div class="label-detail">{{ label.detail }}</div>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                {% endif %}
+                
+                {% if not loop.last %}
+                    <td class="gap-col"></td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+        {% if not loop.last %}
+            <tr class="gap-row-tr">
+                <td colspan="{{ col_span }}" class="gap-row-td"></td>
+            </tr>
+        {% endif %}
+        {% endfor %}
+    </table>
+</div>
+{% endfor %}
+{% endblock %}
